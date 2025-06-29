@@ -1,10 +1,12 @@
 import React from 'react';
 import { NavLink } from 'react-router';
 import ProfastLogo from '../profastlogo/ProfastLogo';
+import { Link } from 'react-router';
 
 const Navbar = () => {
     const navItems =<>
         <li><NavLink to="/">Home</NavLink></li>
+        <li><NavLink to="/sendParcel">Send A Parcel</NavLink></li>
         <li><NavLink to="/coverage">Coverage</NavLink></li>
         <li><NavLink to="/about">About Us</NavLink></li>
        
@@ -30,7 +32,7 @@ const Navbar = () => {
                 </ul>
             </div>
             <div className="navbar-end">
-                <a className="btn">Button</a>
+                <Link className='btn btn-success' to='/login'>Login</Link>
             </div>
       </div>
     );
