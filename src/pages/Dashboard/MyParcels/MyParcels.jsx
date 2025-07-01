@@ -4,10 +4,12 @@ import useAxiosSecure from '../../../hooks/useAxiosSecure';
 import { useQuery } from '@tanstack/react-query';
 import MyParcelsTable from './parcelsTable';
 import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router';
 
 const MyParcels = () => {
     const { user } = useAuth();
     const axiosSecure = useAxiosSecure();
+    const navigate = useNavigate();
 
     const { data: parcels = [], isLoading, refetch } = useQuery({
         queryKey: ['my-parcels', user?.email],
@@ -15,22 +17,19 @@ const MyParcels = () => {
         queryFn: async () => {
             const res = await axiosSecure.get(`/parcels?email=${user.email}`);
             console.log("Response from /parcels:", res.data);
-            // Access the parcels array inside res.data.data
             return Array.isArray(res.data.data) ? res.data.data : [];
         }
     });
-    
+
     const handleView = (parcel) => {
         console.log("🔍 Viewing:", parcel);
-        // Optionally open modal or route to details
+        // Optional: implement view details logic
     };
 
-    const handlePay = (parcel) => {
-        console.log("💳 Pay for:", parcel);
-        // Integrate payment gateway or show alert
+    const handlePay = (id) => {
+        console.log("💳 Pay for parcel with ID:", id);
+        navigate(`/dashboard/payment/${id}`);
     };
-
-   
 
     const handleDelete = async (parcel) => {
         const result = await Swal.fire({
@@ -58,7 +57,6 @@ const MyParcels = () => {
             }
         }
     };
-    
 
     return (
         <div className="p-4">

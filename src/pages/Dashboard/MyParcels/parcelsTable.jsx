@@ -43,7 +43,7 @@ const MyParcelsTable = ({ parcels, onView, onDelete, onPay }) => {
                                     <FaEye />
                                 </button>
                                 <button
-                                    onClick={() => onPay(parcel)}
+                                    onClick={() => onPay(parcel._id)}
                                     className="btn btn-xs btn-success tooltip"
                                     data-tip="Pay Now"
                                     disabled={parcel.payment_status === 'paid'}
