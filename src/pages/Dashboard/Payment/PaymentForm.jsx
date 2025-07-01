@@ -1,17 +1,26 @@
-import React, { useState } from 'react';
-import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import React, { useEffect, useState } from 'react';
+import {
+    CardNumberElement,
+    CardExpiryElement,
+    CardCvcElement,
+    useElements,
+    useStripe
+} from '@stripe/react-stripe-js';
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'react-router';
+import { useParams, useNavigate } from 'react-router';
 import useAxiosSecure from '../../../hooks/useAxiosSecure';
+import Swal from 'sweetalert2';
 
 const PaymentForm = () => {
     const stripe = useStripe();
     const elements = useElements();
-    const { parcelId } = useParams(); // From route: /payment/:parcelId
+    const { parcelId } = useParams();
     const axiosSecure = useAxiosSecure();
+    const navigate = useNavigate();
     const [error, setError] = useState('');
+    const [clientSecret, setClientSecret] = useState('');
 
-    // Fetch parcel data by ID
+    // Fetch parcel data
     const { isPending, data: parcelInfo = {}, isError } = useQuery({
         queryKey: ['parcel', parcelId],
         enabled: !!parcelId,
@@ -21,32 +30,72 @@ const PaymentForm = () => {
         }
     });
 
-    // Handle Stripe payment submission
+    const amount = parcelInfo.cost;
+    const amountInCents = Math.round(amount * 100);
+
+    // Step 1: Get clientSecret on mount
+    useEffect(() => {
+        if (parcelInfo._id) {
+            axiosSecure.post('/create-payment-intent', {
+                amount: amountInCents,
+                parcelId: parcelInfo._id,
+            }).then(res => {
+                setClientSecret(res.data?.clientSecret);
+            }).catch(err => {
+                console.error('❌ Error getting clientSecret', err);
+            });
+        }
+    }, [parcelInfo._id, amountInCents, axiosSecure]);
+
+    // Step 2: Handle payment
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!stripe || !elements) return;
+        if (!stripe || !elements || !clientSecret) return;
 
-        const card = elements.getElement(CardElement);
-        if (!card) {
-            console.error("❌ CardElement not found");
-            return;
-        }
+        const card = elements.getElement(CardNumberElement);
+        if (!card) return setError('Card input not found.');
 
-        const { error, paymentMethod } = await stripe.createPaymentMethod({
+        // Create payment method
+        const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({
             type: 'card',
             card,
         });
 
-        if (error) {
-            setError(error.message);
-        } else {
+        if (pmError) {
+            setError(pmError.message);
+            return;
+        }
+
+        // Confirm payment
+        const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+            payment_method: paymentMethod.id,
+        });
+
+        if (confirmError) {
+            console.error('❌ Payment failed:', confirmError);
+            setError(confirmError.message);
+            return;
+        }
+
+        if (paymentIntent.status === 'succeeded') {
             setError('');
-            console.log("✅ Payment method created:", paymentMethod);
-            // TODO: send paymentMethod.id + parcelInfo._id to backend for payment intent
+
+            // ✅ Show success alert
+            Swal.fire({
+                title: 'Payment Successful!',
+                text: `Payment ID: ${paymentIntent.id}`,
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+
+            // 🔁 Optional: Redirect after success
+            setTimeout(() => {
+                navigate('/dashboard/myParcels'); // change to your route
+            }, 2000);
         }
     };
 
-    // Conditional rendering
+    // UI: loading or error
     if (isPending) return <div className="text-center text-lg">Loading parcel details...</div>;
     if (isError) return <div className="text-red-500 text-center">❌ Failed to load parcel data.</div>;
 
@@ -61,22 +110,56 @@ const PaymentForm = () => {
                 <p><strong>Status:</strong> {parcelInfo.payment_status}</p>
             </div>
 
-            {/* Stripe Form */}
-            <form onSubmit={handleSubmit}>
-                <CardElement
-                    className="border p-5 rounded-md mb-4 shadow-inner"
-                    options={{
-                        style: {
-                            base: {
-                                fontSize: '18px',
-                                color: '#333',
-                                '::placeholder': {
-                                    color: '#aaa',
+            {/* Payment Form */}
+            <form onSubmit={handleSubmit} className="w-full space-y-5">
+                <div>
+                    <label className="text-gray-700 font-medium">Card Number</label>
+                    <CardNumberElement
+                        className="w-full border p-4 rounded-md shadow-inner mt-1"
+                        options={{
+                            style: {
+                                base: {
+                                    fontSize: '18px',
+                                    color: '#333',
+                                    '::placeholder': { color: '#aaa' },
                                 },
                             },
-                        },
-                    }}
-                />
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <label className="text-gray-700 font-medium">Expiry Date</label>
+                    <CardExpiryElement
+                        className="w-full border p-4 rounded-md shadow-inner mt-1"
+                        options={{
+                            style: {
+                                base: {
+                                    fontSize: '18px',
+                                    color: '#333',
+                                    '::placeholder': { color: '#aaa' },
+                                },
+                            },
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <label className="text-gray-700 font-medium">CVC</label>
+                    <CardCvcElement
+                        className="w-full border p-4 rounded-md shadow-inner mt-1"
+                        options={{
+                            style: {
+                                base: {
+                                    fontSize: '18px',
+                                    color: '#333',
+                                    '::placeholder': { color: '#aaa' },
+                                },
+                            },
+                        }}
+                    />
+                </div>
+
                 <button
                     type="submit"
                     className="btn btn-success w-full text-white text-lg"
@@ -84,6 +167,7 @@ const PaymentForm = () => {
                 >
                     Pay ৳{parcelInfo.cost}
                 </button>
+
                 {error && <p className="text-red-500 mt-2 text-center">{error}</p>}
             </form>
         </div>
