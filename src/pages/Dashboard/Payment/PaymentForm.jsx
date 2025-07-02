@@ -80,6 +80,21 @@ const PaymentForm = () => {
         if (paymentIntent.status === 'succeeded') {
             setError('');
 
+            // ✅ Step 3: Save payment info to backend
+            const paymentData = {
+                parcelId: parcelInfo._id,
+                userEmail: parcelInfo.creatorEmail,
+                transactionId: paymentIntent.id,
+                amount: parcelInfo.cost,
+                currency: 'usd'
+            };
+
+            try {
+                await axiosSecure.post('/payments', paymentData);
+            } catch (err) {
+                console.error("❌ Error saving payment history:", err);
+            }
+
             // ✅ Show success alert
             Swal.fire({
                 title: 'Payment Successful!',
@@ -90,7 +105,7 @@ const PaymentForm = () => {
 
             // 🔁 Optional: Redirect after success
             setTimeout(() => {
-                navigate('/dashboard/myParcels'); // change to your route
+                navigate('/dashboard/myParcels');
             }, 2000);
         }
     };
