@@ -8,13 +8,12 @@ const SocialLogin = () => {
     const axiosInstance = useAxios(); 
     const location = useLocation();
     const navigate = useNavigate();
-    const from = location.state?.from?.pathname || '/';
+    const from = location.state?.from || '/';
 
     const handleGoogleSignIn = async () => {
         try {
             const result = await signInWithGoogle();
-            const user = result.user;
-
+            const user = result.user;          
             const userInfo = {
                 email: user.email,
                 displayName: user.displayName,
@@ -28,7 +27,7 @@ const SocialLogin = () => {
             const res = await axiosInstance.post('/users', userInfo);
             console.log('User saved to DB:', res.data);
 
-            navigate(from, { replace: true });
+            navigate(from);
         } catch (error) {
             console.error('Error signing in with Google:', error);
         }
