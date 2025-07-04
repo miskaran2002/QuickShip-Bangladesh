@@ -55,7 +55,7 @@ const Login = () => {
 
                         <button className="btn btn-success mt-4">Login</button>
                     </fieldset>
-                    <p > <small>Don't have an Account?  please</small><Link className='btn btn-link' to='/register'>Register</Link></p>
+                    <p > <small>Don't have an Account?  please</small><Link state={{from}} className='btn btn-link' to='/register'>Register</Link></p>
 
                 </form>
                 <SocialLogin></SocialLogin>
