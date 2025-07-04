@@ -1,12 +1,12 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router';
 import ProfastLogo from '../pages/shared/profastlogo/ProfastLogo';
-import { FaHome, FaBox, FaHistory, FaMapMarkerAlt, FaUserEdit, FaMotorcycle, FaClock, FaUserShield } from 'react-icons/fa';
+import { FaHome, FaBox, FaHistory, FaMapMarkerAlt, FaUserEdit, FaMotorcycle, FaClock, FaUserShield, FaUserCheck } from 'react-icons/fa';
 import useUserRole from '../hooks/useUserRole';
 
 const DashboardLayout = () => {
     const { role, roleLoading } = useUserRole();
-console.log(role);
+    console.log(role);
     return (
         <div className="drawer lg:drawer-open">
             <input id="my-drawer-2" type="checkbox" className="drawer-toggle" />
@@ -35,11 +35,11 @@ console.log(role);
                     </div>
                     <div className="mx-2 flex-1 px-2 lg:hidden">Dashboard</div>
                     <div className="hidden flex-none lg:hidden">
-                       
+
                     </div>
                 </div>
 
-                 {<Outlet></Outlet>}
+                {<Outlet></Outlet>}
 
 
 
@@ -78,11 +78,19 @@ console.log(role);
                             <FaUserEdit className="inline-block mr-2" /> Update Profile
                         </NavLink>
                     </li>
-                     {/* riders link */}
-                   
-                    { 
-                     !roleLoading && role === 'admin' &&
+                    {/* riders link */}
+
+                    {
+                        !roleLoading && role === 'admin' &&
                         <>
+
+                            <li>
+                                <NavLink to="/dashboard/assignRider">
+                                    <FaUserCheck className="inline-block mr-2" /> Assign Rider
+                                </NavLink>
+                            </li>
+
+
                             <li>
                                 <NavLink to="/dashboard/activeRiders">
                                     <FaMotorcycle className="inline-block mr-2" /> Active Riders
@@ -99,7 +107,7 @@ console.log(role);
                                     <FaUserShield className="inline-block mr-2" /> Make Admin
                                 </NavLink>
                             </li>
-                        
+
                         </>
                     }
 
