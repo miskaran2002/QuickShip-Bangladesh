@@ -5,6 +5,7 @@ import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import useAuth from '../../hooks/useAuth';
 import useAxiosSecure from '../../hooks/useAxiosSecure';
+import { useNavigate } from 'react-router';
 
 const MySwal = withReactContent(Swal);
 
@@ -22,6 +23,7 @@ const SendParcelForm = () => {
     const { register, handleSubmit, watch, reset } = useForm();
     const { user } = useAuth();
     const axiosSecure = useAxiosSecure();
+    const navigate = useNavigate();
 
     const parcelType = watch("parcelType");
     const senderRegion = watch("senderRegion");
@@ -89,6 +91,7 @@ const SendParcelForm = () => {
                 if (res.data?.insertedId || res.data?.success) {
                     await MySwal.fire("Success!", "Parcel Submitted Successfully!", "success");
                     reset();
+                    navigate('/dashboard/myParcels');
                 } else {
                     await MySwal.fire("Error", "Failed to save parcel", "error");
                 }

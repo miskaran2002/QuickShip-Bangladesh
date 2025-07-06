@@ -6,14 +6,13 @@ import Swal from 'sweetalert2';
 const AssignRider = () => {
     const axiosSecure = useAxiosSecure();
 
-    // State for modal open, selected parcel, riders, selected rider
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedParcel, setSelectedParcel] = useState(null);
     const [riders, setRiders] = useState([]);
     const [loadingRiders, setLoadingRiders] = useState(false);
-    const [selectedRiderId, setSelectedRiderId] = useState(null);
+    const [selectedRiderEmail, setSelectedRiderEmail] = useState(null);  // <-- riderEmail here
 
-    // Load parcels with filter payment_status=paid and delivery_status=not_collected
+    // Load parcels
     const {
         data: parcels = [],
         isLoading: parcelsLoading,
@@ -28,11 +27,11 @@ const AssignRider = () => {
         },
     });
 
-    // Open modal and load riders filtered by parcel's senderRegion
+    // Open modal and load riders by region
     const openAssignModal = async (parcel) => {
         setSelectedParcel(parcel);
         setModalOpen(true);
-        setSelectedRiderId(null);
+        setSelectedRiderEmail(null);
         setLoadingRiders(true);
 
         try {
@@ -48,9 +47,9 @@ const AssignRider = () => {
         }
     };
 
-    // Assign rider to parcel API call with SweetAlert2 notifications
+    // Handle assign rider
     const handleAssignRider = async () => {
-        if (!selectedRiderId) {
+        if (!selectedRiderEmail) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Oops...',
@@ -61,7 +60,7 @@ const AssignRider = () => {
 
         try {
             await axiosSecure.patch(`/parcels/${selectedParcel._id}/assign`, {
-                riderId: selectedRiderId,
+                riderEmail: selectedRiderEmail,      // <-- send riderEmail as backend expects
                 delivery_status: 'assigned',
             });
 
@@ -76,7 +75,7 @@ const AssignRider = () => {
 
             setModalOpen(false);
             setSelectedParcel(null);
-            setSelectedRiderId(null);
+            setSelectedRiderEmail(null);
             refetchParcels();
         } catch (error) {
             console.error('Assign rider failed:', error);
@@ -134,7 +133,7 @@ const AssignRider = () => {
                 </div>
             )}
 
-            {/* Modal for rider selection */}
+            {/* Modal */}
             {modalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
                     <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 max-h-[80vh] overflow-y-auto">
@@ -155,9 +154,9 @@ const AssignRider = () => {
                                             type="radio"
                                             id={rider._id}
                                             name="rider"
-                                            value={rider._id}
-                                            checked={selectedRiderId === rider._id}
-                                            onChange={() => setSelectedRiderId(rider._id)}
+                                            value={rider.email}   // <-- use rider.email here
+                                            checked={selectedRiderEmail === rider.email}
+                                            onChange={() => setSelectedRiderEmail(rider.email)}
                                         />
                                         <label htmlFor={rider._id} className="cursor-pointer">
                                             {rider.name} — {rider.region}
@@ -172,7 +171,7 @@ const AssignRider = () => {
                                 className="btn btn-sm btn-outline"
                                 onClick={() => {
                                     setModalOpen(false);
-                                    setSelectedRiderId(null);
+                                    setSelectedRiderEmail(null);
                                     setSelectedParcel(null);
                                 }}
                             >
@@ -180,7 +179,7 @@ const AssignRider = () => {
                             </button>
                             <button
                                 className="btn btn-sm btn-success"
-                                disabled={!selectedRiderId}
+                                disabled={!selectedRiderEmail}
                                 onClick={handleAssignRider}
                             >
                                 Assign
