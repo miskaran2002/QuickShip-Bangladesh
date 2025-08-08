@@ -1,4 +1,5 @@
-🚀 QuickShip Bangladesh
+**🚀 QuickShip Bangladesh**
+
 QuickShip Bangladesh is a fast and reliable parcel delivery platform designed to simplify logistics across all 64 districts of Bangladesh. With a user-friendly interface, real-time tracking, and efficient admin and rider dashboards, it ensures seamless operations from booking to delivery.
 
 💡 Ideal for small businesses, e-commerce sellers, and individuals who want hassle-free nationwide parcel delivery.
